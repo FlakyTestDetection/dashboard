@@ -11,4 +11,4 @@ notifications:
   slack:
     rooms: flakycov:aAStE8BTe029PVZHzsa4CHzz
     template:
-    - "I just deployed a new version of the dashboard! Build <%{build_url}|#%{build_number}> (<%{compare_url}|%{commit}>) of %{repository}@%{branch} by %{author} %{result} in %{duration}"
+    - "I just deployed a new version of the <https://flakytestdetection.github.io/dashboard/|flaky test dashboard>! Build <%{build_url}|#%{build_number}> (<%{compare_url}|%{commit}>) of %{repository}@%{branch} by %{author} %{result} in %{duration}"

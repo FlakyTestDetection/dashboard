@@ -12,7 +12,15 @@
   animation: spin 1s infinite linear;
   -webkit-animation: spin2 1s infinite linear;
 }
-
+.success {
+  background-color: #449d44;
+}
+.danger {
+  background-color: #d9534f;
+}
+.info {
+  background-color: #2aabd2;
+}
 @keyframes spin {
   from { transform: scale(1) rotate(0deg); }
   to { transform: scale(1) rotate(360deg); }
