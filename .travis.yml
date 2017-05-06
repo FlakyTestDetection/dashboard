@@ -6,4 +6,9 @@ env:
  global:
   - ENCRYPTION_LABEL: 7d9c2b09c3a5
   - COMMIT_AUTHOR_EMAIL: "jon@jonbell.net"
-
+notifications:
+  email: false
+  slack:
+    rooms: flakycov:aAStE8BTe029PVZHzsa4CHzz
+    template:
+    - "I just deployed a new version of the dashboard! Build <%{build_url}|#%{build_number}> (<%{compare_url}|%{commit}>) of %{repository}@%{branch} by %{author} %{result} in %{duration}"
