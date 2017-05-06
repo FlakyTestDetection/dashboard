@@ -99,7 +99,13 @@ class BuildsList extends Component {
 							var nFlakes = 0;
 							var nFailures = 0;
 							if(job.tests)
-								nTests = Object.keys(job.tests).length;
+							{
+								nTests = 0;
+								for(let k in job.tests)
+								{
+									 nTests += job.tests[k].nMethods;
+								}
+							}
 							if(job.failures && job.failures.flaky)
 								nFlakes = Object.keys(job.failures.flaky).length;
 							nFailures = nFlakes;
@@ -172,7 +178,7 @@ class GHOrg extends Component {
 			<Panel header="Key to test listing">
 				<Badge bsClass="badge danger"># Tests failing</Badge>
 				<Badge bsClass="badge info"># Tests failing but flaky</Badge>
-				<Badge bsClass="badge success"># Tests total</Badge>
+				<Badge bsClass="badge success">Total # test methods</Badge>
 			</Panel>
 				<Panel header="Results by project">
 					<ListGroup>{this.props.orgs.filter(k=>orgPassesFilter(k['repo'],this.props.builds,this.props.filter)).map(createOrg)}</ListGroup></Panel>
