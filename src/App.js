@@ -46,7 +46,7 @@ function jobPassesFilter(job, filter)
 {
 	if(job.state === 'passed' && filter.showOK)
 		return true;
-	if(job.state === 'errored' && filter.showErrors)
+	if((job.state === 'errored' || !job.tests) && filter.showErrors)
 		return true;
 	if(job.state === 'failed' && filter.showWarnings)
 		return true;
@@ -59,10 +59,10 @@ function jobPassesFilter(job, filter)
 
 class BuildsList extends Component {
 	getJobStyle(job) {
-		if (job.state === 'passed')
-			return 'success';
-		else if (job.state === 'errored')
+		if (job.state === 'errored' || !job.tests)
 			return 'danger';
+		else if (job.state === 'passed')
+			return 'success';
 		else if (job.state === 'failed')
 			return 'warning';
 		return 'info';
@@ -94,12 +94,35 @@ class BuildsList extends Component {
 
 					{Object.keys(item).filter(b => jobPassesFilter(item[b],_this.props.filter)).map(function (jobId) {
 							var job = item[jobId];
+
+							var nTests= -1;
+							var nFlakes = 0;
+							var nFailures = 0;
+							if(job.tests)
+								nTests = Object.keys(job.tests).length;
+							if(job.failures && job.failures.flaky)
+								nFlakes = Object.keys(job.failures.flaky).length;
+							nFailures = nFlakes;
+							if(job.failures && job.failures.notflaky)
+								nFailures = Object.keys(job.failures.notflaky).length;
+
+							var testStr;
+							if(nTests < 0)
+								testStr = <b>No tests collected!</b>
+							else {
+								if(nFlakes)
+									testStr = <b>Failures: {nFailures}/{nTests} ({nFlakes} flaky!)</b>
+								else if(nFailures)
+									testStr = <b>Failures: {nFailures}/{nTests} </b>
+								else
+									testStr = <b>Tests: {nTests}</b>
+							}
 							return <ListGroupItem bsStyle={_this.getJobStyle(job)} key={jobId}><span>Job:
 							<a target="_new"
 							   href={"https://travis-ci.org/FlakyTestDetection/" + _this.props.proj + "/jobs/" + jobId}>{job.number}</a>,
 							building <a target="_new"
 							            href={"https://github.com/FlakyTestDetection/" + _this.props.proj + "/commit/" + job.commit}>{(job.commit ? job.commit.substr(job.commit.length - 7) : "????")}</a>
-
+								{testStr}
 								{/*<span style={{display: 'none'}}>Tests: <ul>*/}
 								{/*{*/}
 								{/*(job.tests == null ? "" : Object.keys(job.tests).filter(v => v !== '.key').map(function (testName) {*/}
