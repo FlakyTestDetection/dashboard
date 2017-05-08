@@ -103,6 +103,7 @@ class BuildsList extends Component {
 								nTests = 0;
 								for(let k in job.tests)
 								{
+									if(job.tests[k].nMethods)
 									 nTests += job.tests[k].nMethods;
 								}
 							}
