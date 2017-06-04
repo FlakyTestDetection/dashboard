@@ -46,7 +46,7 @@ function jobPassesFilter(job, filter)
 {
 	if(job.state === 'passed' && filter.showOK)
 		return true;
-	if((job.state === 'errored' || !job.tests) && filter.showErrors)
+	if((job.state === 'errored' || !job.nTestMethods) && filter.showErrors)
 		return true;
 	if(job.state === 'failed' && filter.showWarnings)
 		return true;
@@ -59,7 +59,7 @@ function jobPassesFilter(job, filter)
 
 class BuildsList extends Component {
 	getJobStyle(job) {
-		if (job.state === 'errored' || !job.tests)
+		if (job.state === 'errored' || !job.nTestMethods)
 			return 'danger';
 		else if (job.state === 'passed')
 			return 'success';
@@ -98,21 +98,13 @@ class BuildsList extends Component {
 							var nTests= -1;
 							var nFlakes = 0;
 							var nFailures = 0;
-							if(job.tests)
-							{
-								nTests = 0;
-								for(let k in job.tests)
-								{
-									if(job.tests[k].nMethods)
-									 nTests += job.tests[k].nMethods;
-								}
-							}
-							if(job.failures && job.failures.flaky)
-								nFlakes = Object.keys(job.failures.flaky).length;
+							if(job.nTestMethods)
+								nTests = job.nTestMethods;
+							if(job.nFlakies)
+								nFlakes = job.nFlakies;
 							nFailures = nFlakes;
-							if(job.failures && job.failures.notflaky)
-								nFailures = Object.keys(job.failures.notflaky).length;
-
+							if(job.nFailuresNotFlaky)
+								nFailures = job.nFailuresNotFlaky;
 							var testStr = [];
 							if(nTests < 0)
 								testStr.push(<Label bsStyle="danger" key="tests0">No tests collected!</Label>);
@@ -223,7 +215,7 @@ class ProjectList extends Component {
 	componentWillMount() {
 		var buildRef = db.ref("MirroredRepos");
 		this.bindAsArray(buildRef, 'orgs');
-		this.bindAsObject(db.ref("builds/FlakyTestDetection/"), "builds");
+		this.bindAsObject(db.ref("summary/FlakyTestDetection/"), "builds");
 		this.setState(prevState => ({
 			filter:{
 				showLatestOnly: true,
