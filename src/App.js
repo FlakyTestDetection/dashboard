@@ -6,7 +6,7 @@ import reactMixin from 'react-mixin'
 import './App.css';
 
 // import { Button } from 'react-bootstrap';
-import {ListGroup, ListGroupItem, Panel, Button, Glyphicon, Label, Badge} from 'react-bootstrap';
+import {ListGroup, ListGroupItem, Panel, Button, Glyphicon, Label, Badge, ButtonGroup, DropdownButton, MenuItem} from 'react-bootstrap';
 
 var config = {
 	apiKey: "AIzaSyBffCZyWfVU5CYnkJH9FGyXrI-U896D4zE",
@@ -20,6 +20,21 @@ firebase.initializeApp(config);
 
 var db = firebase.database();
 
+function getNewestBuild(org, builds)
+{
+	if(builds && builds[org])
+	{
+		var m = 0;
+		for(let b in builds[org])
+		{
+			for(let k in builds[org][b])
+				if(builds[org][b][k].build_date && builds[org][b][k].build_date > m)
+					m = builds[org][b][k].build_date;
+		}
+		return m;
+	}
+	return 0;
+}
 function orgPassesFilter(org, builds, filter)
 {
 	if(builds && builds[org])
@@ -174,7 +189,27 @@ class GHOrg extends Component {
 				<Badge bsClass="badge success">Total # test methods</Badge>
 			</Panel>
 				<Panel header="Results by project">
-					<ListGroup>{this.props.orgs.filter(k=>orgPassesFilter(k['repo'],this.props.builds,this.props.filter)).map(createOrg)}</ListGroup></Panel>
+					<ListGroup>{this.props.orgs.sort(function(a,b)
+					{
+						if(_this.props.filter.sort==='newest')
+						{
+							var i = getNewestBuild(a.repo,_this.props.builds);
+                            var j = getNewestBuild(b.repo,_this.props.builds);
+   							if(i < j)
+								return 1;
+							else if(i > j)
+								return -1;
+							return 0;
+						}
+						else
+						{
+                            if(a.org > b.org)
+                                return 1;
+                            else if(a.org<b.org)
+                                return -1;
+                            return 0;
+						}
+					}).filter(k=>orgPassesFilter(k['repo'],this.props.builds,this.props.filter)).map(createOrg)}</ListGroup></Panel>
 		</div>)
 	};
 }
@@ -184,18 +219,25 @@ class ProjectList extends Component {
 	constructor(props) {
 		super(props);
 		this.toggleFilter = this.toggleFilter.bind(this);
-	}
+        this.toggleSort = this.toggleSort.bind(this);
+
+    }
 
 	toggleFilter(e) {
 		var curFilter = this.state.filter;
 		curFilter[e.currentTarget.getAttribute("data-filter")] = !curFilter[e.currentTarget.getAttribute("data-filter")];
-				this.setState(curFilter);
+		this.setState(curFilter);
 	};
-
+	toggleSort(e){
+        var curFilter = this.state.filter;
+        curFilter['sort'] = e;
+		this.setState(curFilter);
+	};
 	render() {
 		return (
 			<div><Panel header="Filter settings">
 				<h2>Show only jobs that:</h2>
+				<ButtonGroup>
 				<Button active={this.state.filter.showLatestOnly} bsStyle="primary" data-filter="showLatestOnly"
 				        onClick={this.toggleFilter}>Most recent build per project</Button>
 				<Button active={this.state.filter.showErrors} bsStyle="danger" data-filter="showErrors"
@@ -206,7 +248,12 @@ class ProjectList extends Component {
 					OK</Button>
 				<Button active={this.state.filter.showInfo} bsStyle="info" data-filter="showInfo"
 				        onClick={this.toggleFilter}>Job Unknown</Button>
-
+				</ButtonGroup>
+				{/*<h2>Sorting:</h2>*/} &nbsp;
+				<DropdownButton id="sort-dropdown" title="Sort-by" onSelect={this.toggleSort}>
+					<MenuItem eventKey="alpha" active={this.state.filter.sort === 'alpha'}>Alphabetical</MenuItem>
+					<MenuItem eventKey="newest" active={this.state.filter.sort === 'newest'}>Newest First</MenuItem>
+				</DropdownButton>
 			</Panel>
 				<GHOrg orgs={this.state.orgs} filter={this.state.filter} builds={this.state.builds} />
 			</div>);
@@ -222,7 +269,8 @@ class ProjectList extends Component {
 				showErrors: true,
 				showWarnings: true,
 				showInfo: false,
-				showOK: true
+				showOK: true,
+				sort: 'newest'
 			}
 		}));
 	};
