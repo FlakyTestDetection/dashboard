@@ -30,3 +30,12 @@
   from { -webkit-transform: rotate(0deg); }
   to { -webkit-transform: rotate(360deg); }
 }
+.list-group-item .unconfirmed{
+  background-color: #dbedf7;
+}
+.list-group-item .confirmed-flake {
+  background-color: #e0f1d8;
+}
+.list-group-item .confirmed-notflake {
+  background-color: #f1dede;
+}
