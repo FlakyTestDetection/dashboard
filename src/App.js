@@ -25,6 +25,8 @@ import {
 	NavItem
 } from 'react-bootstrap';
 
+import Confirm from 'react-confirm-bootstrap';
+
 var config = {
 	apiKey: "AIzaSyBffCZyWfVU5CYnkJH9FGyXrI-U896D4zE",
 	authDomain: "flakytests.firebaseapp.com",
@@ -93,6 +95,32 @@ class BuildsList extends Component {
 		return 'info';
 	}
 
+	onHide(proj,build,job){
+		var triageRef = db.ref("triage/FlakyTestDetection/"+proj);
+		triageRef.once("value").then(function(val){
+			let v = val.val();
+
+			Object.keys(v).forEach(function(test){
+				if(v[test].flaky)
+					Object.keys(v[test].flaky).forEach(function(jid)
+					{
+						if(jid === job)
+						{
+							triageRef.child(test).child("flaky").child(jid).remove();
+						}
+					});
+				if(v[test].notFlaky)
+					Object.keys(v[test].notFlaky).forEach(function(jid)
+					{
+						if(jid === job)
+						{
+							triageRef.child(test).child("notFlaky").child(jid).remove();
+						}
+					});
+			});
+		});
+	}
+
 	render() {
 		var _this = this;
 
@@ -142,6 +170,8 @@ class BuildsList extends Component {
 
 							testStr.push(<Badge key="tests3" bsClass="badge success">{nTests}</Badge>);
 						}
+						if(nFlakes > 10 || nFailures > 10)
+						testStr.push(<Confirm key="conf" onConfirm={_this.onHide.bind(_this,_this.props.proj,bid,jobId)} body="Are you sure you want to mark this build as a tool error?" confirmTest="Confirm Hide" title="Confirm Hide"><Button>Mark as diffcov-error'ed build</Button></Confirm>);
 						return <ListGroupItem bsStyle={_this.getJobStyle(job)} key={jobId}><span>Job:
 							<a target="_new"
 							   href={"https://travis-ci.org/FlakyTestDetection/" + _this.props.proj + "/jobs/" + jobId}>{job.number}</a>,
@@ -216,7 +246,9 @@ class TestTriage extends Component{
 			nFlakes = Object.keys(testData.flaky).length;
 		let nFails = 0;
 		if(testData.notFlaky)
-			nFails = Object.keys(testData.notflaky).length;
+			nFails = Object.keys(testData.notFlaky).length;
+		if(nFails === 0 && nFlakes === 0)
+			return null;
 		return <ListGroupItem key={test} bsClass={"list-group-item " + triageState}><h4>{test}</h4> Flaked: {nFlakes + (nFlakes > 0 ? ": ": "")}
 			<span>
 			{(testData.flaky? Object.keys(testData.flaky).map(function (jobid) {
@@ -227,9 +259,9 @@ class TestTriage extends Component{
 		</span>
 			Other failures: {nFails}
 			<span>
-			{(testData.notFlaky ? Object.keys(testData.notflaky).map(function (jobid) {
+			{(testData.notFlaky ? Object.keys(testData.notFlaky).map(function (jobid) {
 					return <span key={jobid}><a target="_new"
-					                            href={"https://travis-ci.org/FlakyTestDetection/" + _this.props.proj + "/jobs/" + jobid}>{testData.notflaky[jobid]}</a>&nbsp;</span>;
+					                            href={"https://travis-ci.org/FlakyTestDetection/" + _this.props.proj + "/jobs/" + jobid}>{testData.notFlaky[jobid]}</a>&nbsp;</span>;
 				}
 			) :"")}
 		</span>
@@ -498,16 +530,6 @@ reactMixin(ProjectTestsList.prototype, ReactFireMixin)
 reactMixin(TestsList.prototype, ReactFireMixin)
 
 
-class LoginForm extends Component {
-	render(){
-		return <div>
-			<div id="sign-in-status"></div>
-			<div id="sign-in"></div>
-			<div id="account-details"></div>
-
-		</div>
-	}
-}
 class App extends Component {
 
 	constructor(props) {
@@ -534,14 +556,6 @@ class App extends Component {
 
 	}
 	changeNav(e){
-		if(e === 3)
-		{
-			firebase.auth().signOut().then(function() {
-				// Sign-out successful.
-			}, function(error) {
-				// An error happened.
-			});
-		}
 		this.setState({activeNav: e});
 	}
 	render() {
@@ -553,11 +567,9 @@ class App extends Component {
 				<Nav bsStyle="tabs" activeKey={this.state.activeNav} onSelect={this.changeNav}>
 					<NavItem eventKey={1}>View grouped by tests</NavItem>
 					<NavItem eventKey={2}>View grouped by builds</NavItem>
-					<NavItem eventKey={3}>Sign out</NavItem>
 				</Nav>
 				{(this.state.activeNav === 1 ?
-					(this.state && this.state.user ?
-						<ProjectTestsList />: <LoginForm />) :
+						<ProjectTestsList /> :
 				<ProjectList />)
 				}
 
