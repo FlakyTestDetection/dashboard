@@ -556,8 +556,58 @@ class App extends Component {
 		});
 
 	}
+	download(content, fileName, mimeType) {
+		var a = document.createElement('a');
+		mimeType = mimeType || 'application/octet-stream';
+
+		if (navigator.msSaveBlob) { // IE10
+			navigator.msSaveBlob(new Blob([content], {
+				type: mimeType
+			}), fileName);
+		} else if (URL && 'download' in a) { //html5 A[download]
+			a.href = URL.createObjectURL(new Blob([content], {
+				type: mimeType
+			}));
+			a.setAttribute('download', fileName);
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		} else {
+			location.href = 'data:application/octet-stream,' + encodeURIComponent(content); // only this mime type is supported
+		}
+	}
 	changeNav(e){
-		this.setState({activeNav: e});
+		if(e === 3)
+		{
+			var _this = this;
+			db.ref("triage/FlakyTestDetection").once("value").then(function(v){
+				let csv = "project,testName,numberOfLikelyFlakes,numberOfFailures,state\n";
+				Object.keys(v.val()).forEach(function(proj){
+					Object.keys(v.val()[proj]).forEach(function(test){
+						let d = v.val()[proj][test];
+						if(d.state && d.state === 'tool-error')
+							return;
+						csv +=proj+","+test+",";
+						let nFlake = 0;
+						let nFail = 0;
+						if (d.flaky)
+							nFlake = Object.keys(d.flaky).length;
+						if (d.notflaky)
+							nFail = Object.keys(d.notflaky).length;
+						csv += nFlake + "," + nFail+","+d.state+"\n";
+						csv+="\n";
+					});
+				});
+				console.log("OK,got csv");
+				// console.log(csv);
+				_this.download(csv,"flakyCoverageExport.csv","text/csv;encoding:utf-8");
+			}).catch(function(er){
+				console.log(er);
+			});
+
+		}
+		else
+			this.setState({activeNav: e});
 	}
 	render() {
 		return (
@@ -568,6 +618,7 @@ class App extends Component {
 				<Nav bsStyle="tabs" activeKey={this.state.activeNav} onSelect={this.changeNav}>
 					<NavItem eventKey={1}>View grouped by tests</NavItem>
 					<NavItem eventKey={2}>View grouped by builds</NavItem>
+					<NavItem eventKey={3}>Export to CSV</NavItem>
 				</Nav>
 				{(this.state.activeNav === 1 ?
 						<ProjectTestsList /> :
