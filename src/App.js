@@ -25,7 +25,7 @@ import {
 	NavItem
 } from 'react-bootstrap';
 
-// import Confirm from 'react-confirm-bootstrap';
+import Confirm from 'react-confirm-bootstrap';
 
 var config = {
 	apiKey: "AIzaSyBffCZyWfVU5CYnkJH9FGyXrI-U896D4zE",
@@ -170,8 +170,8 @@ class BuildsList extends Component {
 
 							testStr.push(<Badge key="tests3" bsClass="badge success">{nTests}</Badge>);
 						}
-						/*if(nFlakes > 10 || nFailures > 10)*/
-						/*testStr.push(<Confirm key="conf" onConfirm={_this.onHide.bind(_this,_this.props.proj,bid,jobId)} body="Are you sure you want to mark this build as a tool error?" confirmTest="Confirm Hide" title="Confirm Hide"><Button>Mark as diffcov-error'ed build</Button></Confirm>);*/
+						if(nFlakes > 10 || nFailures > 10)
+						testStr.push(<Confirm key="conf" onConfirm={_this.onHide.bind(_this,_this.props.proj,bid,jobId)} body="Are you sure you want to mark this build as a tool error? If you are not Jon, you should probably not do this." confirmTest="Confirm Hide" title="Confirm Hide"><Button>Mark as diffcov-error'ed build</Button></Confirm>);
 						return <ListGroupItem bsStyle={_this.getJobStyle(job)} key={jobId}><span>Job:
 							<a target="_new"
 							   href={"https://travis-ci.org/FlakyTestDetection/" + _this.props.proj + "/jobs/" + jobId}>{job.number}</a>,
@@ -306,8 +306,10 @@ class TestsList extends Component {
 		var _this = this;
 		var ok = false;
 		Object.keys(testList).map(function (test) {
-			if(test !== '.key' && test !== '.value' && _this.testPassesFilter(testList[test],filter))
-					ok = true;
+			if(test !== '.key' && test !== '.value' && _this.testPassesFilter(testList[test],filter) && testList[test].flaky)
+			{
+				ok = true;
+			}
 			return null;
 		});
 
