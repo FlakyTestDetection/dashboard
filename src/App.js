@@ -247,7 +247,7 @@ class TestTriage extends Component{
 		let nFails = 0;
 		if(testData.notflaky)
 			nFails = Object.keys(testData.notflaky).length;
-		if(nFails === 0 && nFlakes === 0)
+		if(nFlakes === 0)
 			return null;
 		return <ListGroupItem key={test} bsClass={"list-group-item " + triageState}><h4>{test}</h4> Flaked: {nFlakes + (nFlakes > 0 ? ": ": "")}
 			<span>
