@@ -245,8 +245,8 @@ class TestTriage extends Component{
 		if(testData.flaky)
 			nFlakes = Object.keys(testData.flaky).length;
 		let nFails = 0;
-		if(testData.notFlaky)
-			nFails = Object.keys(testData.notFlaky).length;
+		if(testData.notflaky)
+			nFails = Object.keys(testData.notflaky).length;
 		if(nFails === 0 && nFlakes === 0)
 			return null;
 		return <ListGroupItem key={test} bsClass={"list-group-item " + triageState}><h4>{test}</h4> Flaked: {nFlakes + (nFlakes > 0 ? ": ": "")}
@@ -257,11 +257,11 @@ class TestTriage extends Component{
 				}
 			) : "")}
 		</span>
-			Other failures: {nFails}
+			Other failures: {nFails}:&nbsp;
 			<span>
-			{(testData.notFlaky ? Object.keys(testData.notFlaky).map(function (jobid) {
+			{(testData.notflaky ? Object.keys(testData.notflaky).map(function (jobid) {
 					return <span key={jobid}><a target="_new"
-					                            href={"https://travis-ci.org/FlakyTestDetection/" + _this.props.proj + "/jobs/" + jobid}>{testData.notFlaky[jobid]}</a>&nbsp;</span>;
+					                            href={"https://travis-ci.org/FlakyTestDetection/" + _this.props.proj + "/jobs/" + jobid}>{testData.notflaky[jobid]}</a>&nbsp;</span>;
 				}
 			) :"")}
 		</span>
